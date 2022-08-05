@@ -44,9 +44,10 @@ router.post("/register", async (req, res) => {
 
   try {
     savedAdmin = await admin.save();
-    res.status(200).send({ message: "Admin registered successfully" });
+    res.status(200).json({ message: "Admin registered successfully" });
   } catch (error) {
-    res.status(400).send(error);
+    console.error(error);
+    res.status(400).json({error:error});
   }
 });
 

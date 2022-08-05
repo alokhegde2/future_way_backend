@@ -30,9 +30,11 @@ app.use(helmet());
 
 //Importing all routes middlewares
 const registerAdminRoute = require("./admin/routes/authentication/auth");
+const collegeRegistrationRoute = require("./admin/routes/registrations/college_registration")
 
 //All route middlewares goes here
 app.use(`${api}/admin/authentication`, registerAdminRoute);
+app.use(`${api}/admin/registration/college`, collegeRegistrationRoute);
 
 
 //Connecting to mongodb database
