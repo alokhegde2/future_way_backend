@@ -55,9 +55,11 @@ mongoose
     // useFindAndModify: false
   })
   .then(() => {
+    console.log("Called 1")
     console.log("Database connection is ready");
   })
   .catch((err) => {
+    console.log("Called 2")
     console.error(err);
   });
 
