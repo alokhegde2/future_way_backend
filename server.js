@@ -3,6 +3,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require('helmet');
 const mongoose = require("mongoose");
+var compression = require('compression');
 
 //importing dot env
 require("dotenv/config");
@@ -26,6 +27,8 @@ app.use(express.json());
 app.use(morgan("tiny"));
 //Always use helmet for safety
 app.use(helmet());
+//Compress all routes
+app.use(compression()); 
 
 
 //Importing all routes middlewares
@@ -35,6 +38,11 @@ const collegeRegistrationRoute = require("./admin/routes/registrations/college_r
 //All route middlewares goes here
 app.use(`${api}/admin/authentication`, registerAdminRoute);
 app.use(`${api}/admin/registration/college`, collegeRegistrationRoute);
+
+//TODO:Romove latter
+app.get('/',(req,res)=>{
+  return res.send("Hello World");
+})
 
 
 //Connecting to mongodb database
