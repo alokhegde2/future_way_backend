@@ -44,6 +44,7 @@ app.get('/',(req,res)=>{
   return res.send("Hello World");
 })
 
+console.log(process.env.DATABASE+"/future_way");
 
 //Connecting to mongodb database
 mongoose
