@@ -47,18 +47,18 @@ app.get('/',(req,res)=>{
 
 //Connecting to mongodb database
 mongoose
-  .connect(process.env.DATABASE, {
+  .connect(process.env.DATABASE+"future_way", {
     useNewUrlParser: true,
     // useUnifiedTopology: true,
     // useCreateIndex: true,
-    dbName: "future_way",
+    // dbName: "future_way",
     // useFindAndModify: false
   })
   .then(() => {
     console.log("Database connection is ready");
   })
   .catch((err) => {
-    console.log(err);
+    console.error(err);
   });
 
 
