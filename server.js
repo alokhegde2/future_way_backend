@@ -47,7 +47,7 @@ app.get('/',(req,res)=>{
 
 //Connecting to mongodb database
 mongoose
-  .connect(process.env.DATABASE+"future_way", {
+  .connect(process.env.DATABASE+"/future_way", {
     useNewUrlParser: true,
     // useUnifiedTopology: true,
     // useCreateIndex: true,
