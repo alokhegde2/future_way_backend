@@ -32,35 +32,41 @@ app.use(compression());
 
 
 //Importing all routes middlewares
+//Auth routes
 const registerAdminRoute = require("./admin/routes/authentication/auth");
+
+//Registration Route
 const collegeRegistrationRoute = require("./admin/routes/registrations/college_registration")
+const studentRegistrationRoute = require("./admin/routes/registrations/student_registration")
+
+//Course Module
+const categoryRoute = require('./admin/routes/courses/categories')
 
 //All route middlewares goes here
 app.use(`${api}/admin/authentication`, registerAdminRoute);
+
+//Registration Route Middlewares
 app.use(`${api}/admin/registration/college`, collegeRegistrationRoute);
+app.use(`${api}/admin/registration/student`, studentRegistrationRoute);
 
-//TODO:Romove latter
-app.get('/',(req,res)=>{
-  return res.send("Hello World");
-})
+//course module routes middlewares
+app.use(`${api}/admin/courses/category`, categoryRoute)
 
-console.log(process.env.DATABASE+"/future_way");
 
 //Connecting to mongodb database
 mongoose
   .connect(process.env.DATABASE+"/future_way", {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
+    //TODO:Add it while deployment
+    // useUnifiedTopology: true,
     // useCreateIndex: true,
     // dbName: "future_way",
     // useFindAndModify: false
   })
   .then(() => {
-    console.log("Called 1")
     console.log("Database connection is ready");
   })
   .catch((err) => {
-    console.log("Called 2")
     console.error(err);
   });
 
