@@ -38,6 +38,11 @@ router.post('/register', verify, async (req, res) => {
     })
 
     try {
+        collegeData = await College.findOne({"name":name})
+
+        if(collegeData){
+            return res.status(400).json({"status":"error","message":"College already exists"})
+        }
         savedCollege = await college.save();
         res.status(200).send({ message: "College registered successfully" });
     } catch (error) {
