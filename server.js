@@ -4,6 +4,13 @@ const cors = require("cors");
 const helmet = require('helmet');
 const mongoose = require("mongoose");
 var compression = require('compression');
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
 
 //importing dot env
 require("dotenv/config");
@@ -76,7 +83,9 @@ mongoose
 //Initializing port
 const port = process.env.PORT || 3000;
 
+var server = https.createServer(options, app);
+
 //Running server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running at port ${port} ...`);
 });
