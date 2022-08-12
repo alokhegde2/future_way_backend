@@ -16,7 +16,7 @@ const { courseCreationValidation } = require('../../validation/courses/course_va
 router.post('/create', verify, async (req, res) => {
     const { courseName, courseDescription, categoryId, thumbnailUrl, videoUrl } = req.body;
 
-    
+
 
     const { error } = courseCreationValidation(req.body);
     if (error) {
@@ -49,6 +49,28 @@ router.post('/create', verify, async (req, res) => {
         res.status(500).json({ error: error });
     }
 
+});
+
+
+router.get('/allCourses', verify, async (req, res) => {
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+
+    const startIndex = (page - 1) * limit;
+
+
+    try {
+        const data = await Course.find().populate({
+            path: "category",
+            select: ['name', 'description']
+        }).limit(limit).skip(startIndex)
+
+
+        return res.status(200).json({ courses: data });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ error: error });
+    }
 })
 
 
