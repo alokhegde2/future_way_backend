@@ -28,7 +28,7 @@ app.use(morgan("tiny"));
 //Always use helmet for safety
 app.use(helmet());
 //Compress all routes
-app.use(compression()); 
+app.use(compression());
 
 
 //Importing all routes middlewares
@@ -41,6 +41,7 @@ const studentRegistrationRoute = require("./admin/routes/registrations/student_r
 
 //Course Module
 const categoryRoute = require('./admin/routes/courses/categories')
+const courseRoute = require('./admin/routes/courses/courses')
 
 //All route middlewares goes here
 app.use(`${api}/admin/authentication`, registerAdminRoute);
@@ -51,11 +52,12 @@ app.use(`${api}/admin/registration/student`, studentRegistrationRoute);
 
 //course module routes middlewares
 app.use(`${api}/admin/courses/category`, categoryRoute)
+app.use(`${api}/admin/courses`, courseRoute)
 
 
 //Connecting to mongodb database
 mongoose
-  .connect(process.env.DATABASE+"/future_way", {
+  .connect(process.env.DATABASE + "/future_way", {
     useNewUrlParser: true,
     //TODO:Add it while deployment
     // useUnifiedTopology: true,

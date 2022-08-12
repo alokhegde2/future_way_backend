@@ -20,6 +20,12 @@ router.post('/new', verify, async (req, res) => {
 
     const { name, description } = req.body;
 
+    const categoryData = await Category.findOne({"name":name})
+
+    if(categoryData){
+        return {"status":"error","message":"Category Already Exists"}
+    }
+
     let category = new Category({
         name: name,
         description: description
