@@ -13,6 +13,7 @@ const Course = require('../../models/course_model')
 const { courseCreationValidation } = require('../../validation/courses/course_validation');
 
 
+//Creating the new course
 router.post('/create', verify, async (req, res) => {
     const { courseName, courseDescription, categoryId, thumbnailUrl, videoUrl } = req.body;
 
@@ -51,7 +52,7 @@ router.post('/create', verify, async (req, res) => {
 
 });
 
-
+//Getting all the courses
 router.get('/allCourses', verify, async (req, res) => {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
@@ -71,6 +72,24 @@ router.get('/allCourses', verify, async (req, res) => {
         console.error(error);
         return res.status(500).send({ error: error });
     }
+})
+
+
+//Getting single courses
+router.get('/:id', verify, async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).json({ message: "Invalid Course Id" });
+    }
+
+    try {
+        const data = await Course.findById(req.params.id);
+
+        return res.status(200).json({ course: data });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ error: error });
+    }
+
 })
 
 
