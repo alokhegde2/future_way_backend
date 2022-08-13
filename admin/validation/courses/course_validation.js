@@ -8,6 +8,7 @@ const courseCreationValidation = (data) => {
         courseDescription:Joi.string().default("").optional(),
         categoryId:Joi.string().required(),
         thumbnailUrl:Joi.string().required(),
+        insideThumbnailUrl:Joi.string().required(),
         videoUrl:Joi.string().required()
     });
 

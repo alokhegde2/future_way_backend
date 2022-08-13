@@ -22,7 +22,7 @@ router.post('/register', verify, async (req, res) => {
         return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { name, email, phoneNumber, password, isPaid, collegeId, categorySubscribedId } = req.body;
+    const { name, email, phoneNumber, isPaid, collegeId, categorySubscribedId } = req.body;
 
     const collegeData = await College.findById(collegeId);
 
@@ -57,16 +57,11 @@ router.post('/register', verify, async (req, res) => {
         return res.status(400).json({ message: "Given Mail Id Already Used!" })
     }
 
-    //Hash the student password
-    //creating salt for hashing
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(req.body.password, salt);
 
     const studentRegistration = new Student({
         name: name,
         email: email,
         college: collegeId,
-        hashedPassword: hashPassword,
         isPaid: isPaid,
         phoneNumber: phoneNumber,
         studentCode: studentCode,
@@ -101,7 +96,7 @@ router.get('/allStudents', verify, async (req, res) => {
         }).populate({
             path: "college",
             select: ['name', 'code']
-        }).select(["-hashedPassword"]).limit(limit).skip(startIndex)
+        }).limit(limit).skip(startIndex)
 
 
         return res.status(200).json({ students: data });

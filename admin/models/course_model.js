@@ -17,6 +17,10 @@ const courseDataSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    insideThumbnailUrl: {
+        type: String,
+        required: true,
+    },
     videoUrl: {
         type: String,
         required: true,

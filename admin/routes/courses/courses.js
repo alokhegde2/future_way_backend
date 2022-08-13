@@ -15,7 +15,7 @@ const { courseCreationValidation } = require('../../validation/courses/course_va
 
 //Creating the new course
 router.post('/create', verify, async (req, res) => {
-    const { courseName, courseDescription, categoryId, thumbnailUrl, videoUrl } = req.body;
+    const { courseName, courseDescription, categoryId, thumbnailUrl, insideThumbnailUrl, videoUrl } = req.body;
 
 
 
@@ -39,6 +39,7 @@ router.post('/create', verify, async (req, res) => {
         description: courseDescription,
         category: categoryId,
         thumbnailUrl: thumbnailUrl,
+        insideThumbnailUrl:insideThumbnailUrl,
         videoUrl: videoUrl
     })
 

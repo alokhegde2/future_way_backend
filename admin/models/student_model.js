@@ -14,10 +14,6 @@ const studentDataSchema = new mongoose.Schema({
         min: 5,
         max: 50,
     },
-    hashedPassword: {
-        type: String,
-        required: true,
-    },
     phoneNumber: {
         type: String,
         required: true,
