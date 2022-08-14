@@ -39,7 +39,7 @@ router.post('/create', verify, async (req, res) => {
         description: courseDescription,
         category: categoryId,
         thumbnailUrl: thumbnailUrl,
-        insideThumbnailUrl:insideThumbnailUrl,
+        insideThumbnailUrl: insideThumbnailUrl,
         videoUrl: videoUrl
     })
 
@@ -83,7 +83,10 @@ router.get('/:id', verify, async (req, res) => {
     }
 
     try {
-        const data = await Course.findById(req.params.id);
+        const data = await Course.findById(req.params.id).populate({
+            path: "category",
+            select: ['name', 'description']
+        });
 
         return res.status(200).json({ course: data });
     } catch (error) {
