@@ -25,6 +25,11 @@ const studentDataSchema = new mongoose.Schema({
         required: true,
         default: true
     },
+    isDisabled: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     college: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Colleges",
