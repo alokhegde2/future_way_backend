@@ -39,6 +39,10 @@ app.use(compression());
 
 
 //Importing all routes middlewares
+// Home Page Routes
+const adminDashboardRoute = require('./admin/routes/home/dashboard')
+
+
 //Auth routes
 const registerAdminRoute = require("./admin/routes/authentication/auth");
 
@@ -51,6 +55,10 @@ const categoryRoute = require('./admin/routes/courses/categories')
 const courseRoute = require('./admin/routes/courses/courses')
 
 //All route middlewares goes here
+//Home page routes
+app.use(`${api}/admin/home`, adminDashboardRoute);
+
+//Auth routes
 app.use(`${api}/admin/authentication`, registerAdminRoute);
 
 //Registration Route Middlewares
