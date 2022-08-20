@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 //importing dot env
 require("dotenv/config");
 
-const Admin = require('../../models/admin_model') 
+const Admin = require("../../models/admin_model");
 
 const {
   registerValidation,
@@ -47,7 +47,7 @@ router.post("/register", async (req, res) => {
     res.status(200).json({ message: "Admin registered successfully" });
   } catch (error) {
     console.error(error);
-    res.status(400).json({error:error});
+    res.status(400).json({ error: error });
   }
 });
 
@@ -65,16 +65,6 @@ router.post("/login", async (req, res) => {
   //if user not found
   if (!user) {
     return res.status(400).json({ message: "Email not found" });
-  }
-
-  //If user not verified they are not able to login
-  if (user.status == "Pending") {
-    return res.status(400).json({ message: "User is not verified" });
-  }
-
-  //Checking if user created the master password
-  if (user.masterPassword == "") {
-    return res.status(400).json({ message: "Master Password is not created." });
   }
 
   //comparing two passwords one is user entered and another one is the actual password
@@ -102,7 +92,7 @@ router.post("/login", async (req, res) => {
   );
 
   //returning succes with header auth-token
-  return res.status(200).header("auth-token", token).json({authToken:token});
+  return res.status(200).header("auth-token", token).json({ authToken: token });
 });
 
-module.exports = router
+module.exports = router;
