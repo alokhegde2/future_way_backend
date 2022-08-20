@@ -1,15 +1,15 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
-const helmet = require('helmet');
+const helmet = require("helmet");
 const mongoose = require("mongoose");
-var compression = require('compression');
-const https = require('https');
-const fs = require('fs');
+var compression = require("compression");
+const https = require("https");
+const fs = require("fs");
 
 const options = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
+  key: fs.readFileSync("key.pem"),
+  cert: fs.readFileSync("cert.pem"),
 };
 
 //importing dot env
@@ -28,8 +28,8 @@ app.options("*", cors());
 
 //Middlewares
 //Middleware to serve static files
-app.use(express.static('public'))
-app.use(express.urlencoded({ extended: false }))
+app.use(express.static("public"));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan("tiny"));
 //Always use helmet for safety
@@ -37,22 +37,20 @@ app.use(helmet());
 //Compress all routes
 app.use(compression());
 
-
 //Importing all routes middlewares
 // Home Page Routes
-const adminDashboardRoute = require('./admin/routes/home/dashboard')
-
+const adminDashboardRoute = require("./src/routes/home/dashboard");
 
 //Auth routes
-const registerAdminRoute = require("./admin/routes/authentication/auth");
+const registerAdminRoute = require("./src/routes/authentication/auth");
 
 //Registration Route
-const collegeRegistrationRoute = require("./admin/routes/registrations/college_registration")
-const studentRegistrationRoute = require("./admin/routes/registrations/student_registration")
+const collegeRegistrationRoute = require("./src/routes/registrations/college_registration");
+const studentRegistrationRoute = require("./src/routes/registrations/student_registration");
 
 //Course Module
-const categoryRoute = require('./admin/routes/courses/categories')
-const courseRoute = require('./admin/routes/courses/courses')
+const categoryRoute = require("./src/routes/courses/categories");
+const courseRoute = require("./src/routes/courses/courses");
 
 //All route middlewares goes here
 //Home page routes
@@ -66,9 +64,8 @@ app.use(`${api}/admin/registration/college`, collegeRegistrationRoute);
 app.use(`${api}/admin/registration/student`, studentRegistrationRoute);
 
 //course module routes middlewares
-app.use(`${api}/admin/courses/category`, categoryRoute)
-app.use(`${api}/admin/courses`, courseRoute)
-
+app.use(`${api}/admin/courses/category`, categoryRoute);
+app.use(`${api}/admin/courses`, courseRoute);
 
 //Connecting to mongodb database
 mongoose
@@ -86,7 +83,6 @@ mongoose
   .catch((err) => {
     console.error(err);
   });
-
 
 //Initializing port
 const port = process.env.PORT || 3000;
