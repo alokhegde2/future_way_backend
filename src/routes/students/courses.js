@@ -12,11 +12,11 @@ const Course = require("../../models/course_model");
 // GET COURSES ON THE CATEGORY ID
 
 router.get("/categoryCourse", verify, async (req, res) => {
-  if (!mongoose.isValidObjectId(req.body.categoryId)) {
+  if (!mongoose.isValidObjectId(req.query.categoryId)) {
     return res.status(400).json({ message: "Invalid Category Id" });
   }
 
-  const { categoryId } = req.body;
+  const { categoryId } = req.query;
 
   try {
     const data = await Course.find({ category: categoryId });
