@@ -18,10 +18,17 @@ router.get("/categoryCourse", verify, async (req, res) => {
 
   const { categoryId } = req.query;
 
-  try {
-    const data = await Course.find({ category: categoryId });
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
 
-    console.log("data");
+  try {
+    const data = await Course.find({ category: categoryId })
+      .populate({
+        path: "category",
+        select: ["name", "description"],
+      })
+      .limit(limit)
+      .skip(startIndex);
 
     return res.status(200).json(data);
   } catch (error) {
