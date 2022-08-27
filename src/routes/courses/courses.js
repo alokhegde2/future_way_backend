@@ -104,4 +104,72 @@ router.get("/:id", verify, async (req, res) => {
   }
 });
 
+// DELETING THE CATEGORY CREATED
+router.delete("/:id", verify, async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: "Invalid Course Id" });
+  }
+
+  try {
+    await Course.findByIdAndDelete(req.params.id);
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Course Delete Successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: "error", error: error });
+  }
+});
+
+// UPDATING THE COURSE
+router.put("/:id", verify, async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: "Invalid Course Id" });
+  }
+
+  const {
+    courseName,
+    courseDescription,
+    categoryId,
+    thumbnailUrl,
+    insideThumbnailUrl,
+    videoUrl,
+  } = req.body;
+
+  const { error } = courseCreationValidation(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  const data = {
+    name: courseName,
+    description: courseDescription,
+    thumbnailUrl: thumbnailUrl,
+    insideThumbnailUrl: insideThumbnailUrl,
+    videoUrl: videoUrl,
+    category: categoryId,
+  };
+
+  try {
+    const categoryData = await Category.findById(categoryId);
+
+    if (!categoryData) {
+      return {
+        status: "error",
+        message: "Category Doesn't Exists, Please choose the proper category.",
+      };
+    }
+
+    var response = await Course.findByIdAndUpdate(req.params.id, data);
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Course Updated Successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: "error", error: error });
+  }
+});
+
 module.exports = router;

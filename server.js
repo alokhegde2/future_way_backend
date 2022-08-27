@@ -77,7 +77,7 @@ app.use(`${api}/student/courses`, studentCourseRoute);
 
 //Connecting to mongodb database
 mongoose
-  .connect(process.env.DATABASE + "/future_way", {
+  .connect(process.env.DEV_DATABASE + "/future_way", {
     useNewUrlParser: true,
     //TODO:Add it while deployment
     // useUnifiedTopology: true,
