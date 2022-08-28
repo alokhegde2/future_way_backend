@@ -13,7 +13,7 @@ const verify = require("../../helpers/verify_token");
 
 // COMPRESSING/TRUNCATING THE USERS/STUDENT DATABASE
 
-router("/student", verify, async (req, res) => {
+router.delete("/student", verify, async (req, res) => {
   try {
     await Student.deleteMany({});
 
