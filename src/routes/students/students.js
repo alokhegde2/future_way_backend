@@ -39,6 +39,22 @@ router.post("/login", async (req, res) => {
         .json({ status: "error", message: "User Not Found" });
     }
 
+    // CHECKING FOR STUDENT PAID MONEY OR NOT
+    if (studentData["isPaid"] == false) {
+      return res.status(400).json({
+        status: "error",
+        message: "You didn't paid the fees, Please contact our team.",
+      });
+    }
+
+    //  CHECK IF THE ACCOUNT IS DISABLED
+    if (studentData["isDisabled"] === true) {
+      return res.status(400).json({
+        status: "error",
+        message: "Your account is disabled, Please contact our team.",
+      });
+    }
+
     //importing secret password
     const secret = process.env.SECRET;
 
