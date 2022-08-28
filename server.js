@@ -56,6 +56,9 @@ const courseRoute = require("./src/routes/courses/courses");
 const studentRoute = require("./src/routes/students/students");
 const studentCourseRoute = require("./src/routes/students/courses");
 
+//OTHER MODULES
+const othersHelperRoute = require("./src/routes/others/other_helper_routes");
+
 //All route middlewares goes here
 //Home page routes
 app.use(`${api}/admin/home`, adminDashboardRoute);
@@ -74,6 +77,9 @@ app.use(`${api}/admin/courses`, courseRoute);
 //Student module routes middlewares
 app.use(`${api}/students`, studentRoute);
 app.use(`${api}/student/courses`, studentCourseRoute);
+
+//OTHER MODULE ROUTES MIDDLEWARE
+app.use(`${api}/other/truncate`, othersHelperRoute);
 
 //Connecting to mongodb database
 mongoose
