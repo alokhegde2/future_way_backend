@@ -89,8 +89,7 @@ router.get("/allStudents", verify, async (req, res) => {
   const startIndex = (page - 1) * limit;
 
   try {
-    //TODO: Add is diabled option in future
-    const data = await Student.find()
+    const data = await Student.find({ isDisabled: false })
       .populate({
         path: "categorySubscribed",
         select: ["name", "description"],
