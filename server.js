@@ -83,7 +83,7 @@ app.use(`${api}/other/truncate`, othersHelperRoute);
 
 //Connecting to mongodb database
 mongoose
-  .connect(process.env.DEV_DATABASE + "/future_way", {
+  .connect(process.env.DATABASE + "/future_way", {
     useNewUrlParser: true,
     //TODO:Add it while deployment
     // useUnifiedTopology: true,
