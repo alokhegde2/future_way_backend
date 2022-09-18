@@ -1,7 +1,9 @@
 const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
+
+//Initializing app
+const app = express();
 
 require("dotenv/config");
 
@@ -17,7 +19,7 @@ const {
 
 //Registering new student
 
-router.post("/register", verify, async (req, res) => {
+app.post("/register", verify, async (req, res) => {
   const { error } = studentRegisterValidation(req.body);
   if (error) {
     return res.status(400).json({ message: error.details[0].message });
@@ -98,7 +100,7 @@ router.post("/register", verify, async (req, res) => {
     .json({ message: "Student Account Created Successfuly" });
 });
 
-router.get("/allStudents", verify, async (req, res) => {
+app.get("/allStudents", verify, async (req, res) => {
   const page = parseInt(req.query.page);
   const limit = parseInt(req.query.limit);
 
@@ -126,7 +128,7 @@ router.get("/allStudents", verify, async (req, res) => {
 
 // UPDATING THE STUDENT DATA
 
-router.get("/:id", verify, async (req, res) => {
+app.get("/:id", verify, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: "Invalid Student Id" });
   }
@@ -142,7 +144,7 @@ router.get("/:id", verify, async (req, res) => {
   }
 });
 
-router.put("/:id", verify, async (req, res) => {
+app.put("/:id", verify, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: "Invalid Course Id" });
   }
@@ -201,7 +203,7 @@ router.put("/:id", verify, async (req, res) => {
 });
 
 // DELETING THE STUDENT CREATED
-router.delete("/:id", verify, async (req, res) => {
+app.delete("/:id", verify, async (req, res) => {
   // VERIFYING THE ID
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: "Invalid Course Id" });
@@ -225,4 +227,46 @@ router.delete("/:id", verify, async (req, res) => {
   }
 });
 
-module.exports = router;
+// GETTING STUDENTS ON THE BASIS OF THE COLLGE
+
+app.get("/college/:collegeId", verify, async (req, res) => {
+  // VERIFYING THE ID
+  if (!mongoose.isValidObjectId(req.params.collegeId)) {
+    return res.status(400).json({ message: "Invalid College Id" });
+  }
+
+  var collegeId = req.params.collegeId;
+
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  try {
+    var studentData = await Student.find({
+      college: collegeId,
+      isDisabled: false,
+    })
+      .populate({
+        path: "categorySubscribed",
+        select: ["name", "description"],
+      })
+      .populate({
+        path: "college",
+        select: ["name", "code"],
+      })
+      .limit(limit)
+      .skip(startIndex);
+
+    return res.status(200).json({ students: studentData });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: "error",
+      message: "Some unknown error occured",
+      error: error,
+    });
+  }
+});
+
+module.exports = app;

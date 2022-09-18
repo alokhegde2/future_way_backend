@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const mongoose = require("mongoose");
 
 require("dotenv/config");
@@ -10,6 +13,7 @@ const verify = require("../../helpers/verify_token");
 
 const {
   collegeRegisterValidation,
+  collegeUpdationValidation,
 } = require("../../validation/registration/college_registration_validation");
 
 //Registering new college
@@ -22,7 +26,7 @@ router.post("/register", verify, async (req, res) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  const { name } = req.body;
+  const { name, password } = req.body;
 
   const firstLetterOfCode = name[0];
 
@@ -35,9 +39,15 @@ router.post("/register", verify, async (req, res) => {
   var collegeCode =
     firstLetterOfCode.toUpperCase() + secondLetterOfCode.toUpperCase();
 
+  //Hashing the password
+  //creating salt for hashing
+  const salt = await bcrypt.genSalt(10);
+  const hashPassword = await bcrypt.hash(req.body.password, salt);
+
   let college = new College({
     name: name,
     code: collegeCode,
+    hashedPassword: hashPassword,
   });
 
   try {
@@ -84,7 +94,7 @@ router.put("/:id", verify, async (req, res) => {
   const { id } = req.params;
   //Validating the data before creating the college
 
-  const { error } = collegeRegisterValidation(req.body);
+  const { error } = collegeUpdationValidation(req.body);
   if (error) {
     return res.status(400).json({ message: error.details[0].message });
   }
