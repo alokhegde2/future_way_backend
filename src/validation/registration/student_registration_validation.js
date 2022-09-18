@@ -10,6 +10,11 @@ const studentRegisterValidation = (data) => {
     isPaid: Joi.boolean().default(true),
     collegeId: Joi.string().required(),
     categorySubscribedId: Joi.array().required(),
+    totalFees: Joi.number().required(),
+    paidFees: Joi.number().required(),
+    pendingFees: Joi.number().default(0),
+    dateOfPayment: Joi.date().required(),
+    renewalDate: Joi.date().required(),
   });
 
   return schema.validate(data);

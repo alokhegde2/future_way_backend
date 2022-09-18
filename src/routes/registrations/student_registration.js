@@ -23,8 +23,19 @@ router.post("/register", verify, async (req, res) => {
     return res.status(400).json({ message: error.details[0].message });
   }
 
-  const { name, email, phoneNumber, isPaid, collegeId, categorySubscribedId } =
-    req.body;
+  const {
+    name,
+    email,
+    phoneNumber,
+    isPaid,
+    collegeId,
+    categorySubscribedId,
+    totalFees,
+    paidFees,
+    pendingFees,
+    dateOfPayment,
+    renewalDate,
+  } = req.body;
 
   const collegeData = await College.findById(collegeId);
 
@@ -67,6 +78,11 @@ router.post("/register", verify, async (req, res) => {
     phoneNumber: phoneNumber,
     studentCode: studentCode,
     categorySubscribed: categorySubscribedId,
+    pendingFees: pendingFees,
+    totalFees: totalFees,
+    paidFees: paidFees,
+    dateOfPayment: dateOfPayment,
+    renewalDate: renewalDate,
   });
 
   //Saving all data
