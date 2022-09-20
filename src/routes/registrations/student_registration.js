@@ -157,8 +157,19 @@ app.put("/:id", verify, async (req, res) => {
 
   // GETTING TALL THE DATA
 
-  const { name, email, phoneNumber, isPaid, collegeId, categorySubscribedId } =
-    req.body;
+  const {
+    name,
+    email,
+    phoneNumber,
+    isPaid,
+    collegeId,
+    categorySubscribedId,
+    pendingFees,
+    totalFees,
+    paidFees,
+    dateOfPayment,
+    renewalDate,
+  } = req.body;
 
   //VERIFYING THE COLLEGE ID
 
@@ -189,6 +200,11 @@ app.put("/:id", verify, async (req, res) => {
     isPaid: isPaid,
     phoneNumber: phoneNumber,
     categorySubscribed: categorySubscribedId,
+    pendingFees: pendingFees,
+    totalFees: totalFees,
+    paidFees: paidFees,
+    dateOfPayment: dateOfPayment,
+    renewalDate: renewalDate,
   };
 
   //UPDATING THE DATA
