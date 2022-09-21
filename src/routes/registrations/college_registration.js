@@ -14,6 +14,7 @@ const verify = require("../../helpers/verify_token");
 const {
   collegeRegisterValidation,
   collegeUpdationValidation,
+  loginValidation,
 } = require("../../validation/registration/college_registration_validation");
 
 //Registering new college
@@ -124,6 +125,53 @@ router.put("/:id", verify, async (req, res) => {
     console.error(error);
     res.status(500).json({ error: error });
   }
+});
+
+/**
+ * College Login
+ */
+
+router.post("/login", async (req, res) => {
+  //Validating user details
+  const { error } = loginValidation(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  //Finding that email id is present or not
+  const user = await College.findOne({ code: req.body.code });
+
+  //if user not found
+  if (!user) {
+    return res.status(400).json({ message: "College code not found" });
+  }
+
+  //comparing two passwords one is user entered and another one is the actual password
+  const validPass = await bcrypt.compare(
+    req.body.password,
+    user.hashedPassword
+  );
+
+  //If passwords do not match
+  if (!validPass) {
+    return res.status(400).json({ message: "Invalid password" });
+  }
+
+  //importing secret password
+  const secret = process.env.SECRET;
+
+  //Creating jwt
+  const token = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
+    secret,
+    { expiresIn: "7d" }
+  );
+
+  //returning succes with header auth-token
+  return res.status(200).header("auth-token", token).json({ authToken: token });
 });
 
 module.exports = router;

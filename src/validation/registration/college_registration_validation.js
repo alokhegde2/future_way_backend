@@ -19,5 +19,15 @@ const collegeUpdationValidation = (data) => {
   return schema.validate(data);
 };
 
+const loginValidation = (data) => {
+  const schema = Joi.object({
+    code: Joi.string().min(1).required(),
+    password: Joi.string().min(3).required(),
+  });
+
+  return schema.validate(data);
+};
+
 module.exports.collegeRegisterValidation = collegeRegisterValidation;
 module.exports.collegeUpdationValidation = collegeUpdationValidation;
+module.exports.loginValidation = loginValidation;
