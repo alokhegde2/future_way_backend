@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 require("dotenv/config");
 
 const College = require("../../models/college_data_model");
+const Student = require("../../models/student_model");
 
 const verify = require("../../helpers/verify_token");
 
@@ -172,6 +173,39 @@ router.post("/login", async (req, res) => {
 
   //returning succes with header auth-token
   return res.status(200).header("auth-token", token).json({ authToken: token });
+});
+
+router.get("/dashboard/:id", verify, async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(400).json({ message: "Invalid College Id" });
+  }
+
+  const { id } = req.params;
+
+  try {
+    var collegeName = await College.findById(id);
+
+    if (collegeName === null) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "College not found" });
+    }
+
+    //Getting count of the studenst
+    var studentCount = await Student.find({
+      isDisabled: false,
+      college: id,
+    }).count();
+
+    return res.status(200).json({
+      status: "success",
+      studentCount: studentCount,
+      collegeName: collegeName.name,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", error: error });
+  }
 });
 
 module.exports = router;
