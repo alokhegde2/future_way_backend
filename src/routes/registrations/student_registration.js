@@ -1,21 +1,25 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
-
-//Initializing app
-const app = express();
+const moment = require("moment/moment");
 
 require("dotenv/config");
 
 const College = require("../../models/college_data_model");
-
 const Student = require("../../models/student_model");
+const Subscriptions = require("../../models/subscription_model");
+const Pricing = require("../../models/pricing_model");
 
 const verify = require("../../helpers/verify_token");
+const logger = require("../../helpers/logger");
 
 const {
   studentRegisterValidation,
+  studentUpdateValidation,
 } = require("../../validation/registration/student_registration_validation");
+
+//Initializing app
+const app = express();
 
 //Registering new student
 
@@ -32,11 +36,8 @@ app.post("/register", verify, async (req, res) => {
     isPaid,
     collegeId,
     categorySubscribedId,
-    totalFees,
-    paidFees,
-    pendingFees,
+    isPartialPayment,
     dateOfPayment,
-    renewalDate,
   } = req.body;
 
   const collegeData = await College.findById(collegeId);
@@ -79,21 +80,73 @@ app.post("/register", verify, async (req, res) => {
     isPaid: isPaid,
     phoneNumber: phoneNumber,
     studentCode: studentCode,
-    categorySubscribed: categorySubscribedId,
-    pendingFees: pendingFees,
-    totalFees: totalFees,
-    paidFees: paidFees,
     dateOfPayment: dateOfPayment,
-    renewalDate: renewalDate,
   });
 
   //Saving all data
   try {
-    savedstudent = await studentRegistration.save();
+    // savedstudent = await studentRegistration.save();
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error });
   }
+
+  var nextPaymentDue;
+  //If the payment made by the student is partial then next payment is after 6 months else after 12 months
+  if (isPartialPayment) {
+    nextPaymentDue = moment(new Date(dateOfPayment))
+      .add(6, "months")
+      .toISOString();
+  } else {
+    nextPaymentDue = moment(new Date(dateOfPayment))
+      .add(12, "months")
+      .toISOString();
+  }
+
+  ///Creating subscription
+  for (let index = 0; index < categorySubscribedId.length; index++) {
+    var categoryData = await Pricing.findById(categorySubscribedId[index]);
+    if (categoryData) {
+      var pendingFees = 0;
+      var totalFees = categoryData["price"];
+      if (isPartialPayment) {
+        pendingFees = totalFees / 2;
+      }
+
+      var subscription = new Subscriptions({
+        categoryId: categorySubscribedId[index],
+        college: collegeId,
+        dateOfPayment: dateOfPayment,
+        paidFees: isPaid,
+        student: studentRegistration.id,
+        totalFees: categoryData["price"],
+        pendingFees: pendingFees,
+        isPartialPayment: isPartialPayment,
+        renewalDate: nextPaymentDue,
+      });
+
+      logger.log({
+        level: "info",
+        message: `categoryId: ${categorySubscribedId[index]},
+        college: ${collegeId},
+        dateOfPayment: ${dateOfPayment},
+        paidFees: ${isPaid},
+        student: ${studentRegistration.id},
+        totalFees: ${categoryData["price"]},
+        pendingFees:${pendingFees},
+        isPartialPayment: ${isPartialPayment},
+        renewalDate: ${nextPaymentDue},`,
+      });
+    }
+
+    //Creating the subscription
+    // await subscription.save();
+  }
+
+  logger.log({
+    level: "info",
+    message: `Account created successfully for ${name} ${email}`,
+  });
 
   return res
     .status(200)
@@ -146,30 +199,18 @@ app.get("/:id", verify, async (req, res) => {
 
 app.put("/:id", verify, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ message: "Invalid Course Id" });
+    return res.status(400).json({ message: "Invalid Student Id" });
   }
 
   // VERIFYING THE DATA WHICH ARE SENT FROM THE BODY
-  const { error } = studentRegisterValidation(req.body);
+  const { error } = studentUpdateValidation(req.body);
   if (error) {
     return res.status(400).json({ message: error.details[0].message });
   }
 
   // GETTING TALL THE DATA
 
-  const {
-    name,
-    email,
-    phoneNumber,
-    isPaid,
-    collegeId,
-    categorySubscribedId,
-    pendingFees,
-    totalFees,
-    paidFees,
-    dateOfPayment,
-    renewalDate,
-  } = req.body;
+  const { name, email, phoneNumber, isPaid, collegeId } = req.body;
 
   //VERIFYING THE COLLEGE ID
 
@@ -199,12 +240,6 @@ app.put("/:id", verify, async (req, res) => {
     college: collegeId,
     isPaid: isPaid,
     phoneNumber: phoneNumber,
-    categorySubscribed: categorySubscribedId,
-    pendingFees: pendingFees,
-    totalFees: totalFees,
-    paidFees: paidFees,
-    dateOfPayment: dateOfPayment,
-    renewalDate: renewalDate,
   };
 
   //UPDATING THE DATA

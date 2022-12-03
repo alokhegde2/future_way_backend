@@ -35,40 +35,25 @@ const studentDataSchema = new mongoose.Schema({
     ref: "Colleges",
     required: true,
   },
-  categorySubscribed: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Categories",
-      required: true,
-    },
-  ],
   studentCode: {
     type: String,
     required: true,
     min: 2,
   },
-  totalFees: {
-    type: Number,
+  deviceId: {
+    type: String,
     required: false,
-    default: 0,
+    default: "",
   },
-  paidFees: {
-    type: Number,
+  isVerified: {
+    type: Boolean,
     required: false,
-    default: 0,
+    default: false,
   },
-  pendingFees: {
-    type: Number,
+  isDeleted: {
+    type: Boolean,
     required: false,
-    default: 0,
-  },
-  dateOfPayment: {
-    type: Date,
-    required: false,
-  },
-  renewalDate: {
-    type: Date,
-    required: false,
+    default: false,
   },
   createdDate: {
     type: Date,
