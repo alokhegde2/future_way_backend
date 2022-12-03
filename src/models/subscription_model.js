@@ -11,7 +11,6 @@ const subscriptionDataSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Pricing",
     required: true,
-    unique: true,
   },
   college: {
     type: mongoose.Schema.Types.ObjectId,

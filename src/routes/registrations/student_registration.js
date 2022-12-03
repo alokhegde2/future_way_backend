@@ -108,6 +108,8 @@ app.post("/register", verify, async (req, res) => {
       .toISOString();
   }
 
+  var finalTotalAmount = 0;
+
   ///Creating subscription
   for (let index = 0; index < categorySubscribedId.length; index++) {
     var categoryData = await Pricing.findById(categorySubscribedId[index]);
@@ -121,6 +123,8 @@ app.post("/register", verify, async (req, res) => {
       } else {
         pendingFees = totalFees;
       }
+
+      finalTotalAmount = finalTotalAmount + pendingFees;
 
       var subscription = new Subscriptions({
         categoryId: categorySubscribedId[index],
@@ -186,9 +190,11 @@ app.post("/register", verify, async (req, res) => {
     message: `Account created successfully for ${name} ${email}`,
   });
 
-  return res
-    .status(200)
-    .json({ message: "Student Account Created Successfuly" });
+  return res.status(200).json({
+    message: "Student Account Created Successfuly",
+    totalOrderAmount: finalTotalAmount,
+    isPaid: isPaid,
+  });
 });
 
 /**
@@ -270,7 +276,6 @@ app.post("/forgort-password", async (req, res) => {
       "forgot-password",
       "Reset Password 🔑"
     );
-  
   } catch (error) {
     logger.log({
       level: "error",
