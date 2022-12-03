@@ -198,7 +198,6 @@ app.post("/register", verify, async (req, res) => {
 app.get("/verify/:token", async (req, res) => {
   const token = req.params.token;
 
-  console.log(jwt.decode(token));
   //Verifying token
   try {
     //verifing token
@@ -212,9 +211,74 @@ app.get("/verify/:token", async (req, res) => {
       isVerified: true,
     });
 
-    return res.sendFile(  path.join(__dirname, "../../../", "/public/templates/verified.html"));
+    return res.sendFile(
+      path.join(__dirname, "../../../", "/public/templates/verified.html")
+    );
   } catch (error) {
-    res.status(400).json({ message: "Invalid Token" });
+    return res.sendFile(
+      path.join(__dirname, "../../../", "/public/templates/error.html")
+    );
+  }
+});
+
+/** */
+
+/**
+ * Forgot Password
+ */
+
+app.post("/forgort-password", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Email is required" });
+  }
+
+  try {
+    var userStatus = await Student.findOne({ email: email });
+
+    if (!userStatus) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Account not found!" });
+    }
+
+    //Creating the password reset link
+
+    //importing secret password
+    const secret = process.env.SECRET;
+
+    //Creating jwt
+    const token = jwt.sign(
+      {
+        id: userStatus.id,
+        email: userStatus.email,
+      },
+      secret,
+      { expiresIn: "7d" }
+    );
+
+    //Verification link
+    var verificationLink = `https://${req.hostname}:3000${req.baseUrl}/reset-password/${token}`;
+
+    await sendMail(
+      email,
+      "",
+      verificationLink,
+      "forgot-password",
+      "Reset Password 🔑"
+    );
+  
+  } catch (error) {
+    logger.log({
+      level: "error",
+      message: `Forgot Password | Email: ${email} | Error: ${error}`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Some error occured", error: error });
   }
 });
 
