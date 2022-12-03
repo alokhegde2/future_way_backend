@@ -23,10 +23,10 @@ const subscriptionDataSchema = new mongoose.Schema({
     required: false,
     default: 0,
   },
-  paidFees: {
-    type: Number,
+  isPaid: {
+    type: Boolean,
     required: false,
-    default: 0,
+    default: false,
   },
   isPartialPayment: {
     type: Boolean,
@@ -40,10 +40,12 @@ const subscriptionDataSchema = new mongoose.Schema({
   dateOfPayment: {
     type: Date,
     required: false,
+    default: Date.now(),
   },
   renewalDate: {
     type: Date,
     required: false,
+    default: Date.now(),
   },
   modifiedDate: {
     type: Date,

@@ -2,6 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 const moment = require("moment/moment");
+const jwt = require("jsonwebtoken");
+const path = require("path");
 
 require("dotenv/config");
 
@@ -17,11 +19,14 @@ const {
   studentRegisterValidation,
   studentUpdateValidation,
 } = require("../../validation/registration/student_registration_validation");
+const sendMail = require("../../helpers/mail");
 
 //Initializing app
 const app = express();
 
-//Registering new student
+/**
+ * Registering new student
+ */
 
 app.post("/register", verify, async (req, res) => {
   const { error } = studentRegisterValidation(req.body);
@@ -85,7 +90,7 @@ app.post("/register", verify, async (req, res) => {
 
   //Saving all data
   try {
-    // savedstudent = await studentRegistration.save();
+    savedstudent = await studentRegistration.save();
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error });
@@ -109,15 +114,19 @@ app.post("/register", verify, async (req, res) => {
     if (categoryData) {
       var pendingFees = 0;
       var totalFees = categoryData["price"];
-      if (isPartialPayment) {
-        pendingFees = totalFees / 2;
+      if (isPaid) {
+        if (isPartialPayment) {
+          pendingFees = totalFees / 2;
+        }
+      } else {
+        pendingFees = totalFees;
       }
 
       var subscription = new Subscriptions({
         categoryId: categorySubscribedId[index],
         college: collegeId,
         dateOfPayment: dateOfPayment,
-        paidFees: isPaid,
+        isPaid: isPaid,
         student: studentRegistration.id,
         totalFees: categoryData["price"],
         pendingFees: pendingFees,
@@ -137,11 +146,40 @@ app.post("/register", verify, async (req, res) => {
         isPartialPayment: ${isPartialPayment},
         renewalDate: ${nextPaymentDue},`,
       });
+    } else {
+      logger.log({
+        level: "info",
+        message: `Category not found in price collection| Category ID ${categorySubscribedId[index]}`,
+      });
     }
 
     //Creating the subscription
-    // await subscription.save();
+    await subscription.save();
   }
+
+  //Creating the verification link
+
+  //importing secret password
+  const secret = process.env.SECRET;
+
+  //Creating jwt
+  const token = jwt.sign(
+    {
+      id: studentRegistration.id,
+    },
+    secret,
+    { expiresIn: "7d" }
+  );
+
+  var verificationLink = `https://${req.hostname}:3000${req.baseUrl}/verify/${token}`;
+
+  await sendMail(
+    email,
+    name,
+    verificationLink,
+    "account-created",
+    "Hurray!!! Your Account Created Successfully 🎉"
+  );
 
   logger.log({
     level: "info",
@@ -152,6 +190,37 @@ app.post("/register", verify, async (req, res) => {
     .status(200)
     .json({ message: "Student Account Created Successfuly" });
 });
+
+/**
+ * Verifing student
+ */
+
+app.get("/verify/:token", async (req, res) => {
+  const token = req.params.token;
+
+  console.log(jwt.decode(token));
+  //Verifying token
+  try {
+    //verifing token
+    const verified = jwt.verify(token, process.env.SECRET);
+    req.user = verified;
+
+    var decodedToken = jwt.decode(token);
+    var id = decodedToken["id"];
+
+    var updateStatus = await Student.findByIdAndUpdate(id, {
+      isVerified: true,
+    });
+
+    return res.sendFile(  path.join(__dirname, "../../../", "/public/templates/verified.html"));
+  } catch (error) {
+    res.status(400).json({ message: "Invalid Token" });
+  }
+});
+
+/**
+ * Getting all the students
+ */
 
 app.get("/allStudents", verify, async (req, res) => {
   const page = parseInt(req.query.page);
@@ -179,7 +248,9 @@ app.get("/allStudents", verify, async (req, res) => {
   }
 });
 
-// UPDATING THE STUDENT DATA
+/**
+ * Getting THE STUDENT DATA
+ */
 
 app.get("/:id", verify, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
@@ -196,6 +267,10 @@ app.get("/:id", verify, async (req, res) => {
     return res.status(500).send({ error: error });
   }
 });
+
+/**
+ * Updating Student data
+ */
 
 app.put("/:id", verify, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
@@ -253,7 +328,10 @@ app.put("/:id", verify, async (req, res) => {
   }
 });
 
-// DELETING THE STUDENT CREATED
+/**
+ * DELETING THE STUDENT CREATED
+ */
+
 app.delete("/:id", verify, async (req, res) => {
   // VERIFYING THE ID
   if (!mongoose.isValidObjectId(req.params.id)) {
@@ -278,7 +356,9 @@ app.delete("/:id", verify, async (req, res) => {
   }
 });
 
-// GETTING STUDENTS ON THE BASIS OF THE COLLGE
+/**
+ * GETTING STUDENTS ON THE BASIS OF THE COLLEGE
+ */
 
 app.get("/college/:collegeId", verify, async (req, res) => {
   // VERIFYING THE ID

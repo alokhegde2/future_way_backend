@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
+const logger = require("./logger");
 
-const sendMail = async () => {
+const sendMail = async (toEmail, name, href, mailType, subject) => {
   var mailTemplates = {
     "account-created": `<!DOCTYPE html>
         <html lang="en">
@@ -121,7 +122,7 @@ const sendMail = async () => {
                           You're Future Way account created successfully. Please click on the below link to verify your email id and to activate the account
              </p>
              <center>
-                <a href="https://google.com">Click Here</a>  
+                <a href="${href}">Click Here</a>  
              </center>
                
              <br/> 
@@ -165,33 +166,31 @@ const sendMail = async () => {
 
   // Generate test SMTP service account from ethereal.email
   // Only needed if you don't have a real mail account for testing
-  let testAccount = await nodemailer.createTestAccount();
 
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
+    host: "smtp.zoho.in",
     port: 465,
     secure: true, // true for 465, false for other ports
     auth: {
-      user: 'username@mydomain.com', // your domain email address
-      pass: 'password' // your password
-    }
+      user: "support@futurewaylearning.com", // your domain email address
+      pass: "giwgi5-hehjez-wectAb", // your password
+    },
   });
 
   // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
-    to: "bar@example.com, baz@example.com", // list of receivers
-    subject: "Hello ✔", // Subject line
-    html: "<b>Hello world?</b>", // html body
+    from: '"Future Way" <support@futurewaylearning.com>', // sender address
+    to: `${toEmail}`, // list of receivers
+    bcc: "alokhegde2@gmail.com", //TODO: Remove while production
+    subject: "Hurray!!! Your Account Created Successfully 🎉", // Subject line
+    html: mailTemplates[`${mailType}`], // html body
   });
 
-  console.log("Message sent: %s", info.messageId);
-  // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-
-  // Preview only available when sending through an Ethereal account
-  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-  // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+  logger.log({
+    level: "info",
+    message: `Message sent: ${info.messageId}, To Email: ${toEmail}, Subject: ${subject}, Mail Type: ${mailType}`,
+  });
 };
 
 module.exports = sendMail;
