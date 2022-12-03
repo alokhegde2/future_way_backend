@@ -14,6 +14,7 @@ const verify = require("../../helpers/verify_token");
 const {
   studentLoginValidation,
 } = require("../../validation/students/student_validation");
+const logger = require("../../helpers/logger");
 
 //LOGIN ROUTE
 
@@ -31,7 +32,10 @@ router.post("/login", async (req, res) => {
   // VERIFY IF THE MOBILE NUMBER IS PROPER OR NOT
 
   try {
-    var studentData = await Student.findOne({ phoneNumber: phoneNumber });
+    var studentData = await Student.findOne({
+      phoneNumber: phoneNumber,
+      isDeleted: false,
+    });
 
     if (!studentData) {
       return res
@@ -40,18 +44,35 @@ router.post("/login", async (req, res) => {
     }
 
     // CHECKING FOR STUDENT PAID MONEY OR NOT
-    if (studentData["isPaid"] == false) {
+    if (studentData["isVerified"] == false) {
+      logger.log({
+        level: "error",
+        message: "Login Student | /login | Error: Mail ID id not verified. ",
+      });
       return res.status(400).json({
         status: "error",
-        message: "You didn't paid the fees, Please contact our team.",
+        message:
+          "You're mail id is not verified please find the mail and verify your id",
       });
     }
 
     //  CHECK IF THE ACCOUNT IS DISABLED
     if (studentData["isDisabled"] === true) {
+      logger.log({
+        level: "error",
+        message:
+          "Login Student | /login | Error:Your account is disabled, Please contact our team. ",
+      });
       return res.status(400).json({
         status: "error",
         message: "Your account is disabled, Please contact our team.",
+      });
+    }
+
+    //Adding the device id to the db
+    if (req.body.loginFrom === "app") {
+      await Student.findByIdAndUpdate(studentData["id"], {
+        deviceId: req.body.deviceId,
       });
     }
 
