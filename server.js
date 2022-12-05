@@ -56,6 +56,9 @@ const courseRoute = require("./src/routes/courses/courses");
 const studentRoute = require("./src/routes/students/students");
 const studentCourseRoute = require("./src/routes/students/courses");
 
+//Watch history
+const historyRoute = require("./src/routes/history/history");
+
 //OTHER MODULES
 const othersHelperRoute = require("./src/routes/others/other_helper_routes");
 
@@ -77,6 +80,9 @@ app.use(`${api}/admin/courses`, courseRoute);
 //Student module routes middlewares
 app.use(`${api}/students`, studentRoute);
 app.use(`${api}/student/courses`, studentCourseRoute);
+
+//History module routes middlewares
+app.use(`${api}/history`, historyRoute);
 
 //OTHER MODULE ROUTES MIDDLEWARE
 app.use(`${api}/other/truncate`, othersHelperRoute);
