@@ -6,6 +6,7 @@ require("dotenv/config");
 
 const Category = require("../../models/category_model");
 const Pricing = require("../../models/pricing_model");
+const Subscription = require("../../models/subscription_model");
 
 const verify = require("../../helpers/verify_token");
 
@@ -180,5 +181,48 @@ router.get("/college-price-cateogory/:collegeId", verify, async (req, res) => {
     });
   }
 });
+
+/**
+ * Getting Categoies bought by student
+ */
+
+router.get(
+  "/student-subscribed-category/:studentId",
+  verify,
+  async (req, res) => {
+    const { studentId } = req.params;
+
+    //Check student id is proper or not
+    if (!mongoose.isValidObjectId(req.params.studentId)) {
+      logger.log({
+        level: "error",
+        message: `Student| Invalid Student ID`,
+      });
+      return res.status(400).json({ message: "Invalid Student Id" });
+    }
+
+    //Getting the categories from the subscription collection
+    try {
+      const subscriptionData = await Subscription.find({
+        student: studentId,
+        isPaid: true,
+        renewalDate: { $gt: Date.now() },
+      }).populate({
+        path: "categoryId",
+        select: ["category", "_id"],
+      });
+
+      if (!subscriptionData) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "You're not subscribed" });
+      }
+
+      return res
+        .status(200)
+        .json({ status: "success", categories: subscriptionData });
+    } catch (error) {}
+  }
+);
 
 module.exports = router;
