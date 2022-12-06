@@ -111,7 +111,6 @@ router.get("/:id", verify, async (req, res) => {
 
   try {
     const data = await Student.findById(id)
-      .populate("categorySubscribed")
       .populate("college");
     return res.status(200).json({ student: data });
   } catch (error) {
