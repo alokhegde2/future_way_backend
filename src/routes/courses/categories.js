@@ -210,6 +210,9 @@ router.get(
       }).populate({
         path: "categoryId",
         select: ["category", "_id"],
+        populate:{
+          path:"category"
+        }
       });
 
       if (!subscriptionData) {
