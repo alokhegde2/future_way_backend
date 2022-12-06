@@ -102,6 +102,63 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * Verifying the device id of the current active user
+ */
+
+router.post("/verify-device", verify, async (req, res) => {
+  const { deviceId, studentId } = req.body;
+
+  if (!deviceId || !studentId) {
+    logger.log({
+      level: "error",
+      message: `Student.js | /verify-device | {"status":"error","message":"deviceId and studentId are required"}`,
+    });
+    return res.status(400).json({
+      status: "error",
+      message: "deviceId and studentId are required",
+    });
+  }
+
+  // Checking if the student id is the object id
+  if (!mongoose.isValidObjectId(studentId)) {
+    logger.log({
+      level: "error",
+      message: `Student.js | /verify-device | {status:"error", message: "Invalid Student Id" }`,
+    });
+    return res.status(400).json({status:"error", message: "Invalid Student Id" });
+  }
+
+  var studentData = await Student.findById(studentId);
+
+  if (!studentData) {
+    logger.log({
+      level: "error",
+      message: `Student.js | /verify-device | {"status":"error","message":"Unable to find the student"}`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Unable to find the student" });
+  }
+
+  if (studentData.deviceId !== deviceId) {
+    logger.log({
+      level: "error",
+      message: `Student.js | /verify-device | {"status":"error","message":"Device Id not matching"}`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Device id is not proper" });
+  }
+
+  return res
+    .status(200)
+    .json({ status: "success", message: "Device id is proper" });
+});
+
+/**
+ * Getting single student data
+ */
 router.get("/:id", verify, async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: "Invalid Student Id" });
@@ -110,8 +167,7 @@ router.get("/:id", verify, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const data = await Student.findById(id)
-      .populate("college");
+    const data = await Student.findById(id).populate("college");
     return res.status(200).json({ student: data });
   } catch (error) {
     console.error(error);
