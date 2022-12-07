@@ -29,7 +29,56 @@ app.get("/history-status/:studentId", verify, async (req, res) => {
   //Getting the todays watch history
 
   var todaysDate = new Date().setHours(0, 0, 0, 0);
-  const watchHistory = await History.find({ watchedOn: { $gt: todaysDate } });
+  const watchHistory = await History.find({
+    watchedOn: { $gt: todaysDate },
+    student: studentId,
+  });
+
+  if (!watchHistory) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Unable to get the watch history" });
+  }
+
+  return res.status(200).json({
+    status: "success",
+    watchHistory: watchHistory,
+    count: watchHistory.length,
+  });
+});
+
+/**
+ * Checking for the watching course is new one or old one
+ */
+app.get("/history-status/:studentId/:courseId", verify, async (req, res) => {
+  const { studentId, courseId } = req.params;
+
+  //Check student id is proper or not
+  if (!mongoose.isValidObjectId(studentId)) {
+    logger.log({
+      level: "error",
+      message: `Student| Invalid Student ID`,
+    });
+    return res.status(400).json({ message: "Invalid Student Id" });
+  }
+
+  //Check course id is proper or not
+  if (!mongoose.isValidObjectId(studentId)) {
+    logger.log({
+      level: "error",
+      message: `history.js | /history-status/:studentId/:courseId | Invalid Course ID`,
+    });
+    return res.status(400).json({ message: "Invalid Course Id" });
+  }
+
+  //Getting the todays watch history
+
+  var todaysDate = new Date().setHours(0, 0, 0, 0);
+  const watchHistory = await History.find({
+    watchedOn: { $gt: todaysDate },
+    course: courseId,
+    student: studentId,
+  });
 
   if (!watchHistory) {
     return res
