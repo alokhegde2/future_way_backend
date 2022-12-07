@@ -75,7 +75,6 @@ app.get("/history-status/:studentId/:courseId", verify, async (req, res) => {
 
   var todaysDate = new Date().setHours(0, 0, 0, 0);
   const watchHistory = await History.find({
-    watchedOn: { $gt: todaysDate },
     course: courseId,
     student: studentId,
   });
