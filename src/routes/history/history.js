@@ -80,16 +80,18 @@ app.get("/history-status/:studentId/:courseId", verify, async (req, res) => {
     student: studentId,
   });
 
-  if (!watchHistory) {
-    return res
-      .status(400)
-      .json({ status: "error", message: "Unable to get the watch history" });
+  if (watchHistory) {
+    return res.status(200).json({
+      status: "success",
+      message: "Already Watched",
+      code: "already-watched",
+    });
   }
 
   return res.status(200).json({
     status: "success",
-    watchHistory: watchHistory,
-    count: watchHistory.length,
+    message: "New Video",
+    code: "not-already-watched",
   });
 });
 
