@@ -37,13 +37,11 @@ app.get("/history-status/:studentId", verify, async (req, res) => {
       .json({ status: "error", message: "Unable to get the watch history" });
   }
 
-  return res
-    .status(200)
-    .json({
-      status: "success",
-      watchHistory: watchHistory,
-      count: watchHistory.length,
-    });
+  return res.status(200).json({
+    status: "success",
+    watchHistory: watchHistory,
+    count: watchHistory.length,
+  });
 });
 
 /**
@@ -91,7 +89,16 @@ app.post("/add-histroy", verify, async (req, res) => {
   });
 
   try {
-    await history.save();
+    //Check if the course already in history of the student
+
+    var historyStatus = await History.find({
+      student: studentId,
+      course: courseId,
+    });
+
+    if (historyStatus.length === 0) {
+      await history.save();
+    }
 
     return res.status(200).json({
       status: "success",
