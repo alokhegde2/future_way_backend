@@ -79,7 +79,7 @@ app.get("/history-status/:studentId/:courseId", verify, async (req, res) => {
     student: studentId,
   });
 
-  if (watchHistory) {
+  if (watchHistory.length > 0) {
     return res.status(200).json({
       status: "success",
       message: "Already Watched",
