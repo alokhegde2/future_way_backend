@@ -27,6 +27,12 @@ const subscriptionDataSchema = new mongoose.Schema({
     required: false,
     default: false,
   },
+  modeOfPayment:{
+    type:String,
+    required:false,
+    enum: ['Online', 'Offline'],
+    default:"Online"
+  },
   isPartialPayment: {
     type: Boolean,
     required: true,

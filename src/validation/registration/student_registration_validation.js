@@ -9,6 +9,7 @@ const studentRegisterValidation = (data) => {
     phoneNumber: Joi.string().min(10).max(14).required(),
     isPaid: Joi.boolean().default(true),
     isPartialPayment: Joi.boolean().default(false),
+    modeOfPayment:Joi.string().required(),
     collegeId: Joi.string().required(),
     categorySubscribedId: Joi.array().required(),
     dateOfPayment: Joi.date().required(),
