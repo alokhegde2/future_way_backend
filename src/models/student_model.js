@@ -25,6 +25,11 @@ const studentDataSchema = new mongoose.Schema({
     required: true,
     default: true,
   },
+  otp: {
+    type: Number,
+    required: false,
+    default: 000000,
+  },
   isDisabled: {
     type: Boolean,
     required: true,
