@@ -106,7 +106,7 @@ router.post("/login", async (req, res) => {
 });
 
 /**
- * Login through email for web
+ * Login through email for web (Verify otp and login)
  */
 
 router.post("/web-login", async (req, res) => {
@@ -118,13 +118,13 @@ router.post("/web-login", async (req, res) => {
   }
 
   // GETTING DATA FROM BODY
-  const { phoneNumber } = req.body;
+  const { email, otp } = req.body;
 
   // VERIFY IF THE MOBILE NUMBER IS PROPER OR NOT
 
   try {
     var studentData = await Student.findOne({
-      phoneNumber: phoneNumber,
+      email: email,
       isDeleted: false,
     });
 
@@ -138,7 +138,8 @@ router.post("/web-login", async (req, res) => {
     if (studentData["isVerified"] == false) {
       logger.log({
         level: "error",
-        message: "Login Student | /login | Error: Mail ID id not verified. ",
+        message:
+          "Login Student | /web-login | Error: Mail ID id not verified. ",
       });
       return res.status(400).json({
         status: "error",
@@ -152,7 +153,7 @@ router.post("/web-login", async (req, res) => {
       logger.log({
         level: "error",
         message:
-          "Login Student | /login | Error:Your account is disabled, Please contact our team. ",
+          "Login Student | /web-login | Error:Your account is disabled, Please contact our team. ",
       });
       return res.status(400).json({
         status: "error",
@@ -160,13 +161,17 @@ router.post("/web-login", async (req, res) => {
       });
     }
 
-    //Adding the device id to the db
-    if (req.body.loginFrom === "app") {
-      await Student.findByIdAndUpdate(studentData["id"], {
-        deviceId: req.body.deviceId,
-      });
-    }
+    //Verifing the otp
+    var generatedOtp = studentData["otp"];
 
+    if (generatedOtp !== parseInt(otp)) {
+      logger.log({
+        level: "error",
+        message: "student.js | /web-login | Otp is not matching",
+      });
+
+      return res.status(400).json({ status: "error", message: "Wrong OTP" });
+    }
     //importing secret password
     const secret = process.env.SECRET;
 
@@ -208,7 +213,10 @@ router.post("/generate-otp", async (req, res) => {
   const { email } = req.body;
 
   try {
-    var statusResponse = await Student.findOne({ email: email });
+    var statusResponse = await Student.findOne({
+      email: email,
+      isDeleted: false,
+    });
 
     if (!statusResponse) {
       logger.log({
@@ -241,13 +249,7 @@ router.post("/generate-otp", async (req, res) => {
     await Student.findByIdAndUpdate(statusResponse.id, { otp: otp });
 
     // IF success trigger mail with otp
-    await sendMail(
-      email,
-      otp,
-      "#",
-      "otp",
-      "OTP for future way web app login"
-    );
+    await sendMail(email, otp, "#", "otp", "OTP for future way web app login");
 
     // Then send the success respone
     return res
