@@ -132,7 +132,7 @@ app.post("/register", verify, async (req, res) => {
         college: collegeId,
         dateOfPayment: dateOfPayment,
         isPaid: isPaid,
-        modeOfPayment:modeOfPayment,
+        modeOfPayment: modeOfPayment,
         student: studentRegistration.id,
         totalFees: categoryData["price"],
         pendingFees: pendingFees,
@@ -178,6 +178,183 @@ app.post("/register", verify, async (req, res) => {
   );
 
   var verificationLink = `https://${req.hostname}:3000${req.baseUrl}/verify/${token}`;
+
+  await sendMail(
+    email,
+    name,
+    verificationLink,
+    "account-created",
+    "Hurray!!! Your Account Created Successfully 🎉"
+  );
+
+  logger.log({
+    level: "info",
+    message: `Account created successfully for ${name} ${email}`,
+  });
+
+  return res.status(200).json({
+    message: "Student Account Created Successfuly",
+    totalOrderAmount: finalTotalAmount,
+    isPaid: isPaid,
+  });
+});
+
+/**
+ * Student New Registration
+ */
+
+app.post("/newRegister", verify, async (req, res) => {
+  const {
+    name,
+    email,
+    phoneNumber,
+    isPaid,
+    modeOfPayment,
+    collegeId,
+    categorySubscribedId,
+    isPartialPayment,
+    dateOfPayment,
+  } = req.body;
+
+  const { error } = studentRegisterValidation(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  const collegeData = await College.findById(collegeId);
+
+  if (!collegeData) {
+    console.error("College Data Not Found (Data Comes Next) :", collegeData);
+    return res.status(400).json({ message: "College Not Found!" });
+  }
+
+  const collegeCode = collegeData["code"];
+
+  //Counting the students from that collge
+
+  const studentData = await Student.find({ collegeId: collegeId });
+
+  const studentCount = studentData.length;
+
+  var currentStudentCountNumber;
+
+  if (studentCount + 1 < 10) {
+    currentStudentCountNumber = "0" + (studentCount + 1).toString();
+  } else {
+    currentStudentCountNumber = (studentCount + 1).toString();
+  }
+
+  var studentCode = collegeCode + "-" + currentStudentCountNumber;
+
+  //Check if student mail id present or not
+
+  const studentMailIdStatus = await Student.find({ email: email });
+
+  if (studentMailIdStatus.length != 0) {
+    return res.status(400).json({ message: "Given Mail Id Already Used!" });
+  }
+
+  const studentRegistration = new Student({
+    name: name,
+    email: email,
+    college: collegeId,
+    isPaid: isPaid,
+    phoneNumber: phoneNumber,
+    studentCode: studentCode,
+    dateOfPayment: dateOfPayment,
+  });
+
+  //Saving all data
+  try {
+    savedstudent = await studentRegistration.save();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+
+  var nextPaymentDue;
+
+  if (dateOfPayment) {
+    //If the payment made by the student is partial then next payment is after 6 months else after 12 months
+    if (isPartialPayment) {
+      nextPaymentDue = moment(new Date(dateOfPayment))
+        .add(6, "months")
+        .toISOString();
+    } else {
+      nextPaymentDue = moment(new Date(dateOfPayment))
+        .add(12, "months")
+        .toISOString();
+    }
+  }
+
+  var finalTotalAmount = 0;
+
+  ///Creating subscription
+  for (let index = 0; index < categorySubscribedId.length; index++) {
+    var categoryData = await Pricing.findById(categorySubscribedId[index]);
+    if (categoryData) {
+      var pendingFees = 0;
+      var totalFees = categoryData["price"];
+      if (isPaid) {
+        if (isPartialPayment) {
+          pendingFees = totalFees / 2;
+        }
+      } else {
+        pendingFees = totalFees;
+      }
+
+      finalTotalAmount = finalTotalAmount + pendingFees;
+
+      var subscription = new Subscriptions({
+        categoryId: categorySubscribedId[index],
+        college: collegeId,
+        dateOfPayment: dateOfPayment,
+        isPaid: isPaid,
+        modeOfPayment: modeOfPayment,
+        student: studentRegistration.id,
+        totalFees: categoryData["price"],
+        pendingFees: pendingFees,
+        isPartialPayment: isPartialPayment,
+        renewalDate: nextPaymentDue,
+      });
+
+      logger.log({
+        level: "info",
+        message: `categoryId: ${categorySubscribedId[index]},
+        college: ${collegeId},
+        dateOfPayment: ${dateOfPayment},
+        paidFees: ${isPaid},
+        student: ${studentRegistration.id},
+        totalFees: ${categoryData["price"]},
+        pendingFees:${pendingFees},
+        isPartialPayment: ${isPartialPayment},
+        renewalDate: ${nextPaymentDue},`,
+      });
+      //Creating the subscription
+      await subscription.save();
+    } else {
+      logger.log({
+        level: "info",
+        message: `Category not found in price collection| Category ID ${categorySubscribedId[index]}`,
+      });
+    }
+  }
+
+  //Creating the verification link
+
+  //importing secret password
+  const secret = process.env.SECRET;
+
+  //Creating jwt
+  const token = jwt.sign(
+    {
+      id: studentRegistration.id,
+    },
+    secret,
+    { expiresIn: "7d" }
+  );
+
+  var verificationLink = `https://futurewayapp.online${req.baseUrl}/verify/${token}`;
 
   await sendMail(
     email,

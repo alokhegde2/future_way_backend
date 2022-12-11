@@ -44,7 +44,7 @@ router.post("/register", verify, async (req, res) => {
   //Hashing the password
   //creating salt for hashing
   const salt = await bcrypt.genSalt(10);
-  const hashPassword = await bcrypt.hash(req.body.password, salt);
+  const hashPassword = await bcrypt.hash(password, salt);
 
   let college = new College({
     name: name,

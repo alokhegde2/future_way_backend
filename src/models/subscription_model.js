@@ -27,15 +27,16 @@ const subscriptionDataSchema = new mongoose.Schema({
     required: false,
     default: false,
   },
-  modeOfPayment:{
-    type:String,
-    required:false,
-    enum: ['Online', 'Offline'],
-    default:"Online"
+  modeOfPayment: {
+    type: String,
+    required: false,
+    enum: ["Online", "Offline"],
+    default: "Online",
   },
   isPartialPayment: {
     type: Boolean,
     required: true,
+    default: false,
   },
   pendingFees: {
     type: Number,
@@ -45,12 +46,12 @@ const subscriptionDataSchema = new mongoose.Schema({
   dateOfPayment: {
     type: Date,
     required: false,
-    default: Date.now(),
+    // default: Date.now(),
   },
   renewalDate: {
     type: Date,
     required: false,
-    default: Date.now(),
+    // default: Date.now(),
   },
   modifiedDate: {
     type: Date,

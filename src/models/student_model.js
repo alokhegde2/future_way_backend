@@ -23,7 +23,7 @@ const studentDataSchema = new mongoose.Schema({
   isPaid: {
     type: Boolean,
     required: true,
-    default: true,
+    default: false,
   },
   otp: {
     type: Number,

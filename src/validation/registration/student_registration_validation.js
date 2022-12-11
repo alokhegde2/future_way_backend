@@ -7,12 +7,12 @@ const studentRegisterValidation = (data) => {
     name: Joi.string().min(2).required(),
     email: Joi.string().min(2).required(),
     phoneNumber: Joi.string().min(10).max(14).required(),
-    isPaid: Joi.boolean().default(true),
-    isPartialPayment: Joi.boolean().default(false),
-    modeOfPayment:Joi.string().required(),
     collegeId: Joi.string().required(),
     categorySubscribedId: Joi.array().required(),
-    dateOfPayment: Joi.date().required(),
+    modeOfPayment: Joi.string().required(),
+    isPaid: Joi.boolean().default(false),
+    isPartialPayment: Joi.boolean().default(false),
+    dateOfPayment: Joi.date().optional(),
   });
 
   return schema.validate(data);
