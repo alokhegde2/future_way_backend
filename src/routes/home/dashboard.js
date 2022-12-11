@@ -40,4 +40,10 @@ router.get("/dashboard", verify, async (req, res) => {
   }
 });
 
+
+/**
+ * Verify Device Id
+ */
+
+
 module.exports = router;
