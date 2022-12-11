@@ -53,6 +53,11 @@ const subscriptionDataSchema = new mongoose.Schema({
     required: false,
     // default: Date.now(),
   },
+  isDeleted: {
+    type: Boolean,
+    required:true,
+    default: false,
+  },
   modifiedDate: {
     type: Date,
     default: Date.now(),

@@ -180,7 +180,7 @@ router.post("/web-login", async (req, res) => {
       {
         id: studentData.id,
         email: studentData.email,
-        collegeId: studentData.college
+        collegeId: studentData.college,
       },
       secret,
       { expiresIn: "7d" }

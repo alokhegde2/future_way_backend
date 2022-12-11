@@ -446,7 +446,7 @@ app.post("/forgort-password", async (req, res) => {
     );
 
     //Verification link
-    var verificationLink = `https://${req.hostname}:3000${req.baseUrl}/reset-password/${token}`;
+    var verificationLink = `https://futurewayapp.online${req.baseUrl}/reset-password/${token}`;
 
     await sendMail(
       email,
@@ -479,10 +479,6 @@ app.get("/allStudents", verify, async (req, res) => {
   try {
     const data = await Student.find({ isDisabled: false })
       .populate({
-        path: "categorySubscribed",
-        select: ["name", "description"],
-      })
-      .populate({
         path: "college",
         select: ["name", "code"],
       })
@@ -508,8 +504,36 @@ app.get("/:id", verify, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const data = await Student.findById(id);
-    return res.status(200).json({ student: data });
+    const data = await Student.findById(id).select([
+      "-otp",
+      "-isPaid",
+      "-deviceId",
+    ]);
+
+    if (!data) {
+      logger.log({
+        level: "error",
+        message: "student_register.js | /:id | GET | Student not found",
+      });
+      return res.status(400).json({ student: {}, count: 0 });
+    }
+
+    //Getting the subscription
+
+    const subscriptionData = await Subscriptions.find({
+      student: id,
+      // isDeleted: false, //TODO: Uncomment latter
+    }).populate({
+      path: "categoryId",
+      select: ["category", "_id"],
+      populate: {
+        path: "category",
+      },
+    });
+
+    const responseData = { data, subscription: subscriptionData };
+
+    return res.status(200).json({ student: responseData, count: 1 });
   } catch (error) {
     console.error(error);
     return res.status(500).send({ error: error });
@@ -629,7 +653,8 @@ app.get("/college/:collegeId", verify, async (req, res) => {
       .populate({
         path: "college",
         select: ["name", "code"],
-      }).select(["-otp"])
+      })
+      .select(["-otp"])
       .limit(limit)
       .skip(startIndex);
 
