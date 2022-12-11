@@ -627,13 +627,9 @@ app.get("/college/:collegeId", verify, async (req, res) => {
       isDisabled: false,
     })
       .populate({
-        path: "categorySubscribed",
-        select: ["name", "description"],
-      })
-      .populate({
         path: "college",
         select: ["name", "code"],
-      })
+      }).select(["-otp"])
       .limit(limit)
       .skip(startIndex);
 
