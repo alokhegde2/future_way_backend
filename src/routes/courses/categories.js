@@ -185,6 +185,7 @@ router.get("/college-price-cateogory/:collegeId", verify, async (req, res) => {
 /**
  * Getting Categoies bought by student
  */
+//TODO: Add isDeleted
 
 router.get(
   "/student-subscribed-category/:studentId",
@@ -225,6 +226,54 @@ router.get(
         .status(200)
         .json({ status: "success", categories: subscriptionData });
     } catch (error) {}
+  }
+);
+
+
+/**
+ * Getting Categoies bought by student excluding isPaid Status
+ */
+router.get(
+  "/student-subscribed-category-college/:studentId",
+  verify,
+  async (req, res) => {
+    const { studentId } = req.params;
+
+    //Check student id is proper or not
+    if (!mongoose.isValidObjectId(req.params.studentId)) {
+      logger.log({
+        level: "error",
+        message: `Student| Invalid Student ID`,
+      });
+      return res.status(400).json({ message: "Invalid Student Id" });
+    }
+
+    //Getting the categories from the subscription collection
+    try {
+      const subscriptionData = await Subscription.find({
+        student: studentId,
+      }).populate({
+        path: "categoryId",
+        select: ["category", "_id"],
+        populate:{
+          path:"category"
+        }
+      });
+
+      if (!subscriptionData) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "You're not subscribed" });
+      }
+
+      return res
+        .status(200)
+        .json({ status: "success", categories: subscriptionData });
+    } catch (error) {
+      return res
+      .status(500)
+      .json({ status: "error", message: "Some error occured" });
+    }
   }
 );
 
