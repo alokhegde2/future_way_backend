@@ -557,7 +557,7 @@ app.put("/:id", verify, async (req, res) => {
 
   // GETTING TALL THE DATA
 
-  const { name, email, phoneNumber, isPaid, collegeId } = req.body;
+  const { name, email, phoneNumber, collegeId } = req.body;
 
   //VERIFYING THE COLLEGE ID
 
@@ -585,7 +585,6 @@ app.put("/:id", verify, async (req, res) => {
     name: name,
     email: email,
     college: collegeId,
-    isPaid: isPaid,
     phoneNumber: phoneNumber,
   };
 

@@ -24,7 +24,6 @@ const studentUpdateValidation = (data) => {
     name: Joi.string().min(2).required(),
     email: Joi.string().min(2).required(),
     phoneNumber: Joi.string().min(10).max(14).required(),
-    isPaid: Joi.boolean().default(true),
     collegeId: Joi.string().required(),
   });
 
