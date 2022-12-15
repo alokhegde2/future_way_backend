@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const moment = require("moment/moment");
 
 require("dotenv/config");
 
@@ -13,6 +14,7 @@ const verify = require("../../helpers/verify_token");
 const {
   categoryCreationValidation,
   pricingValidation,
+  subscriptionValidation,
 } = require("../../validation/courses/category_validation");
 const logger = require("../../helpers/logger");
 
@@ -211,9 +213,9 @@ router.get(
       }).populate({
         path: "categoryId",
         select: ["category", "_id"],
-        populate:{
-          path:"category"
-        }
+        populate: {
+          path: "category",
+        },
       });
 
       if (!subscriptionData) {
@@ -228,7 +230,6 @@ router.get(
     } catch (error) {}
   }
 );
-
 
 /**
  * Getting Categoies bought by student excluding isPaid Status
@@ -255,9 +256,9 @@ router.get(
       }).populate({
         path: "categoryId",
         select: ["category", "_id"],
-        populate:{
-          path:"category"
-        }
+        populate: {
+          path: "category",
+        },
       });
 
       if (!subscriptionData) {
@@ -271,10 +272,149 @@ router.get(
         .json({ status: "success", categories: subscriptionData });
     } catch (error) {
       return res
-      .status(500)
-      .json({ status: "error", message: "Some error occured" });
+        .status(500)
+        .json({ status: "error", message: "Some error occured" });
     }
   }
 );
+
+router.delete(
+  "/delete-subscription/:subscriptionId",
+  verify,
+  async (req, res) => {
+    const { subscriptionId } = req.params;
+
+    //Check student id is proper or not
+    if (!mongoose.isValidObjectId(subscriptionId)) {
+      logger.log({
+        level: "error",
+        message: `Student| Invalid Subscription ID`,
+      });
+      return res.status(400).json({ message: "Invalid Student Id" });
+    }
+
+    try {
+      await Subscription.findByIdAndUpdate(subscriptionId, { isDeleted: true });
+
+      return res
+        .status(200)
+        .json({ status: "success", message: "Access Removed" });
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Unable to remove the access" });
+    }
+  }
+);
+
+/**
+ * Subscribing new course
+ */
+
+router.post("/new-category-subscribe", verify, async (req, res) => {
+  const {
+    categoryId,
+    collegeId,
+    dateOfPayment,
+    isPaid,
+    modeOfPayment,
+    studentId,
+    isPartialPayment,
+  } = req.body;
+
+  //Validating the submitted data
+  const { error } = subscriptionValidation(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  //Verifying all the ids
+  if (!mongoose.isValidObjectId(categoryId)) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /new-category-subscribe | POST | Invalid Category ID`,
+    });
+    return res.status(400).json({ message: "Invalid Category Id" });
+  }
+
+  if (!mongoose.isValidObjectId(collegeId)) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /new-category-subscribe | POST | Invalid College ID`,
+    });
+    return res.status(400).json({ message: "Invalid College Id" });
+  }
+
+  if (!mongoose.isValidObjectId(studentId)) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /new-category-subscribe | POST | Invalid Student ID`,
+    });
+    return res.status(400).json({ message: "Invalid Student Id" });
+  }
+
+  var categoryData = await Pricing.findById(categoryId);
+
+  if (categoryData) {
+    var pendingFees = 0;
+    var totalFees = categoryData["price"];
+    if (isPaid) {
+      if (isPartialPayment) {
+        pendingFees = totalFees / 2;
+      }
+    } else {
+      pendingFees = totalFees;
+    }
+    var finalTotalAmount = 0;
+    
+    finalTotalAmount = finalTotalAmount + pendingFees;
+
+    var nextPaymentDue;
+
+    if (dateOfPayment) {
+      //If the payment made by the student is partial then next payment is after 6 months else after 12 months
+      if (isPartialPayment) {
+        nextPaymentDue = moment(new Date(dateOfPayment))
+          .add(6, "months")
+          .toISOString();
+      } else {
+        nextPaymentDue = moment(new Date(dateOfPayment))
+          .add(12, "months")
+          .toISOString();
+      }
+    }
+
+    var subscription = new Subscription({
+      categoryId: categoryId,
+      college: collegeId,
+      dateOfPayment: dateOfPayment,
+      isPaid: isPaid,
+      modeOfPayment: modeOfPayment,
+      student: studentId,
+      totalFees: categoryData["price"],
+      pendingFees: pendingFees,
+      isPartialPayment: isPartialPayment,
+      renewalDate: nextPaymentDue,
+    });
+
+    try {
+      await subscription.save();
+
+      return res
+        .status(200)
+        .json({ status: "success", message: "Subscribed Successfully!" });
+    } catch (error) {
+      logger.log({
+        level: "error",
+        message: `categories.js | /new-category-subscribe | POST | Error: ${error}`,
+      });
+      return res.status(400).json({
+        status: "error",
+        message: "Unable to subscribe",
+        error: error,
+      });
+    }
+  }
+});
 
 module.exports = router;

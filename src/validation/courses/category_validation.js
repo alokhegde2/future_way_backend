@@ -25,5 +25,23 @@ const pricingValidation = (data) => {
   return schema.validate(data);
 };
 
+/**
+ * Subacription Creation validation
+ */
+
+const subscriptionValidation = (data) => {
+  const schema = Joi.object({
+    collegeId: Joi.string().required(),
+    studentId: Joi.string().required(),
+    categoryId: Joi.string().required(),
+    isPaid: Joi.boolean().required(),
+    modeOfPayment: Joi.string().optional().default("Offline"),
+    isPartialPayment: Joi.boolean().optional().default(false),
+  });
+
+  return schema.validate(data);
+};
+
 module.exports.categoryCreationValidation = categoryCreationValidation;
 module.exports.pricingValidation = pricingValidation;
+module.exports.subscriptionValidation = subscriptionValidation;
