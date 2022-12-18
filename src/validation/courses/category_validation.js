@@ -34,7 +34,7 @@ const subscriptionValidation = (data) => {
     collegeId: Joi.string().required(),
     studentId: Joi.string().required(),
     categoryId: Joi.string().required(),
-    isPaid: Joi.boolean().required(),
+    isPaid: Joi.boolean().optional().default(false),
     modeOfPayment: Joi.string().optional().default("Offline"),
     isPartialPayment: Joi.boolean().optional().default(false),
   });
