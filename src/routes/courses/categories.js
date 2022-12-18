@@ -477,6 +477,7 @@ app.put("/update/category-subscribed", verify, async (req, res) => {
 
           updatedSubscriptionData["renewalDate"] = nextPaymentDue;
           updatedSubscriptionData["dateOfPayment"] = dateOfPayment;
+          updatedSubscriptionData["isPaid"] = isPaid;
         }
       } else {
         pendingFees = subscriptionDataStatus.pendingFees;
