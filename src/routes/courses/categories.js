@@ -191,47 +191,43 @@ app.get("/college-price-cateogory/:collegeId", verify, async (req, res) => {
  */
 //TODO: Add isDeleted
 
-app.get(
-  "/student-subscribed-category/:studentId",
-  verify,
-  async (req, res) => {
-    const { studentId } = req.params;
+app.get("/student-subscribed-category/:studentId", verify, async (req, res) => {
+  const { studentId } = req.params;
 
-    //Check student id is proper or not
-    if (!mongoose.isValidObjectId(req.params.studentId)) {
-      logger.log({
-        level: "error",
-        message: `Student| Invalid Student ID`,
-      });
-      return res.status(400).json({ message: "Invalid Student Id" });
+  //Check student id is proper or not
+  if (!mongoose.isValidObjectId(req.params.studentId)) {
+    logger.log({
+      level: "error",
+      message: `Student| Invalid Student ID`,
+    });
+    return res.status(400).json({ message: "Invalid Student Id" });
+  }
+
+  //Getting the categories from the subscription collection
+  try {
+    const subscriptionData = await Subscription.find({
+      student: studentId,
+      isPaid: true,
+      renewalDate: { $gt: Date.now() },
+    }).populate({
+      path: "categoryId",
+      select: ["category", "_id"],
+      populate: {
+        path: "category",
+      },
+    });
+
+    if (!subscriptionData) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "You're not subscribed" });
     }
 
-    //Getting the categories from the subscription collection
-    try {
-      const subscriptionData = await Subscription.find({
-        student: studentId,
-        isPaid: true,
-        renewalDate: { $gt: Date.now() },
-      }).populate({
-        path: "categoryId",
-        select: ["category", "_id"],
-        populate: {
-          path: "category",
-        },
-      });
-
-      if (!subscriptionData) {
-        return res
-          .status(400)
-          .json({ status: "error", message: "You're not subscribed" });
-      }
-
-      return res
-        .status(200)
-        .json({ status: "success", categories: subscriptionData });
-    } catch (error) {}
-  }
-);
+    return res
+      .status(200)
+      .json({ status: "success", categories: subscriptionData });
+  } catch (error) {}
+});
 
 /**
  * Getting Categoies bought by student excluding isPaid Status
@@ -280,34 +276,30 @@ app.get(
   }
 );
 
-app.delete(
-  "/delete-subscription/:subscriptionId",
-  verify,
-  async (req, res) => {
-    const { subscriptionId } = req.params;
+app.delete("/delete-subscription/:subscriptionId", verify, async (req, res) => {
+  const { subscriptionId } = req.params;
 
-    //Check student id is proper or not
-    if (!mongoose.isValidObjectId(subscriptionId)) {
-      logger.log({
-        level: "error",
-        message: `Student| Invalid Subscription ID`,
-      });
-      return res.status(400).json({ message: "Invalid Student Id" });
-    }
-
-    try {
-      await Subscription.findByIdAndUpdate(subscriptionId, { isDeleted: true });
-
-      return res
-        .status(200)
-        .json({ status: "success", message: "Access Removed" });
-    } catch (error) {
-      return res
-        .status(400)
-        .json({ status: "error", message: "Unable to remove the access" });
-    }
+  //Check student id is proper or not
+  if (!mongoose.isValidObjectId(subscriptionId)) {
+    logger.log({
+      level: "error",
+      message: `Student| Invalid Subscription ID`,
+    });
+    return res.status(400).json({ message: "Invalid Student Id" });
   }
-);
+
+  try {
+    await Subscription.findByIdAndUpdate(subscriptionId, { isDeleted: true });
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Access Removed" });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Unable to remove the access" });
+  }
+});
 
 /**
  * Subscribing new course
@@ -521,6 +513,52 @@ app.put("/update/category-subscribed", verify, async (req, res) => {
     return res
       .status(200)
       .json({ status: "success", message: "Nothing to subscribe" });
+  }
+});
+
+/**
+ * Getting single subscription data
+ */
+
+app.get("/subscription/:id", verify, async (req, res) => {
+  const { id } = req.params;
+
+  //Verifying all the ids
+  if (!mongoose.isValidObjectId(id)) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /subscription/:id | GET | Invalid Subscription Id`,
+    });
+    return res.status(400).json({ message: "Invalid Subscription Id" });
+  }
+
+  try {
+    var subscriptionData = await Subscription.findById(id);
+
+    if (subscriptionData) {
+      return res
+        .status(200)
+        .json({ status: "success", subscription: subscriptionData });
+    } else {
+      logger.log({
+        level: "error",
+        message: `categories.js | /subscription/:id | GET | Unable to find the subscription`,
+      });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Subscription not found" });
+    }
+  } catch (error) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /update-category-subscribed | PUT | Error: ${error}`,
+    });
+
+    return res.status(400).json({
+      status: "error",
+      message: "Unable to update subscribtion",
+      error: error,
+    });
   }
 });
 
