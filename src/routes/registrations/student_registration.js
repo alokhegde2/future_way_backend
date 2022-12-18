@@ -406,8 +406,6 @@ app.get("/verify/:token", async (req, res) => {
   }
 });
 
-/** */
-
 /**
  * Forgot Password
  */

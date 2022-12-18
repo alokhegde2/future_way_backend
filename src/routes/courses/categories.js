@@ -479,6 +479,29 @@ app.put("/update/category-subscribed", verify, async (req, res) => {
           updatedSubscriptionData["dateOfPayment"] = dateOfPayment;
           updatedSubscriptionData["isPaid"] = isPaid;
         }
+      }
+      if (Date.parse(subscriptionDataStatus.renewalDate) < Date.now()) {
+        if (isPartialPayment) {
+          pendingFees = totalFees / 2;
+          updatedSubscriptionData["isPartialPayment"] = isPartialPayment;
+        }
+
+        if (dateOfPayment) {
+          //If the payment made by the student is partial then next payment is after 6 months else after 12 months
+          if (isPartialPayment) {
+            nextPaymentDue = moment(new Date(dateOfPayment))
+              .add(6, "months")
+              .toISOString();
+          } else {
+            nextPaymentDue = moment(new Date(dateOfPayment))
+              .add(12, "months")
+              .toISOString();
+          }
+
+          updatedSubscriptionData["renewalDate"] = nextPaymentDue;
+          updatedSubscriptionData["dateOfPayment"] = dateOfPayment;
+          updatedSubscriptionData["isPaid"] = isPaid;
+        }
       } else {
         pendingFees = subscriptionDataStatus.pendingFees;
       }
@@ -557,7 +580,7 @@ app.get("/subscription/:id", verify, async (req, res) => {
 
     return res.status(400).json({
       status: "error",
-      message: "Unable to update subscribtion",
+      message: "Unable to get subscribtion",
       error: error,
     });
   }
