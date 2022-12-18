@@ -1,7 +1,8 @@
 const express = require("express");
-const router = express.Router();
 const mongoose = require("mongoose");
 const moment = require("moment/moment");
+
+const app = express();
 
 require("dotenv/config");
 
@@ -15,12 +16,13 @@ const {
   categoryCreationValidation,
   pricingValidation,
   subscriptionValidation,
+  updateSubscriptionValidation,
 } = require("../../validation/courses/category_validation");
 const logger = require("../../helpers/logger");
 
 //Creating new category
 
-router.post("/new", verify, async (req, res) => {
+app.post("/new", verify, async (req, res) => {
   //Validating the submitted data
   const { error } = categoryCreationValidation(req.body);
   if (error) {
@@ -50,7 +52,7 @@ router.post("/new", verify, async (req, res) => {
 });
 
 // Getting all categories
-router.get("/", verify, async (req, res) => {
+app.get("/", verify, async (req, res) => {
   try {
     const data = await Category.find();
     return res.status(200).json({ categories: data });
@@ -62,7 +64,7 @@ router.get("/", verify, async (req, res) => {
 
 //Updating the category
 
-router.put("/:id", verify, async (req, res) => {
+app.put("/:id", verify, async (req, res) => {
   // Id validation
   if (!mongoose.isValidObjectId(req.params.id)) {
     return res.status(400).json({ message: "Invalid Student Id" });
@@ -102,7 +104,7 @@ router.put("/:id", verify, async (req, res) => {
  * Price will differ for each college
  */
 
-router.post("/price", verify, async (req, res) => {
+app.post("/price", verify, async (req, res) => {
   const { categoryId, collegeId, price } = req.body;
 
   //Validating the submitted data
@@ -143,7 +145,7 @@ router.post("/price", verify, async (req, res) => {
   }
 });
 
-router.get("/college-price-cateogory/:collegeId", verify, async (req, res) => {
+app.get("/college-price-cateogory/:collegeId", verify, async (req, res) => {
   const collegeId = req.params.collegeId;
 
   const page = parseInt(req.query.page);
@@ -189,7 +191,7 @@ router.get("/college-price-cateogory/:collegeId", verify, async (req, res) => {
  */
 //TODO: Add isDeleted
 
-router.get(
+app.get(
   "/student-subscribed-category/:studentId",
   verify,
   async (req, res) => {
@@ -234,7 +236,7 @@ router.get(
 /**
  * Getting Categoies bought by student excluding isPaid Status
  */
-router.get(
+app.get(
   "/student-subscribed-category-college/:studentId",
   verify,
   async (req, res) => {
@@ -278,7 +280,7 @@ router.get(
   }
 );
 
-router.delete(
+app.delete(
   "/delete-subscription/:subscriptionId",
   verify,
   async (req, res) => {
@@ -311,7 +313,7 @@ router.delete(
  * Subscribing new course
  */
 
-router.post("/new-category-subscribe", verify, async (req, res) => {
+app.post("/new-category-subscribe", verify, async (req, res) => {
   const {
     categoryId,
     collegeId,
@@ -366,7 +368,7 @@ router.post("/new-category-subscribe", verify, async (req, res) => {
       pendingFees = totalFees;
     }
     var finalTotalAmount = 0;
-    
+
     finalTotalAmount = finalTotalAmount + pendingFees;
 
     var nextPaymentDue;
@@ -417,4 +419,109 @@ router.post("/new-category-subscribe", verify, async (req, res) => {
   }
 });
 
-module.exports = router;
+/**
+ * Updating the created ubscription
+ * Which is only allowed for the college admin and the system admin
+ * So do implement in the app side or the student web app side
+ */
+
+app.put("/update/category-subscribed", verify, async (req, res) => {
+  const {
+    subscriptionId,
+    dateOfPayment,
+    isPaid,
+    modeOfPayment,
+    isPartialPayment,
+  } = req.body;
+
+  //Validating the submitted data
+  const { error } = updateSubscriptionValidation(req.body);
+  if (error) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /update-category-subscribed | PUT | ${error.details[0].message}`,
+    });
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  //Verifying all the ids
+  if (!mongoose.isValidObjectId(subscriptionId)) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /update-category-subscribed | PUT | Invalid Subscription Id`,
+    });
+    return res.status(400).json({ message: "Invalid Subscription Id" });
+  }
+
+  var subscriptionDataStatus = await Subscription.findById(subscriptionId);
+
+  var categoryData = await Pricing.findById(subscriptionDataStatus.categoryId);
+
+  if (subscriptionDataStatus && categoryData) {
+    var pendingFees = 0;
+    var totalFees = categoryData.price;
+    var nextPaymentDue;
+
+    var updatedSubscriptionData = {};
+
+    if (modeOfPayment === "Offline") {
+      if (!subscriptionDataStatus.isPaid && isPaid) {
+        if (isPartialPayment) {
+          pendingFees = totalFees / 2;
+          updatedSubscriptionData["isPartialPayment"] = isPartialPayment;
+        }
+
+        if (dateOfPayment) {
+          //If the payment made by the student is partial then next payment is after 6 months else after 12 months
+          if (isPartialPayment) {
+            nextPaymentDue = moment(new Date(dateOfPayment))
+              .add(6, "months")
+              .toISOString();
+          } else {
+            nextPaymentDue = moment(new Date(dateOfPayment))
+              .add(12, "months")
+              .toISOString();
+          }
+
+          updatedSubscriptionData["renewalDate"] = nextPaymentDue;
+          updatedSubscriptionData["dateOfPayment"] = dateOfPayment;
+        }
+      } else {
+        pendingFees = subscriptionDataStatus.pendingFees;
+      }
+    }
+
+    var finalTotalAmount = subscriptionDataStatus.totalFees;
+
+    updatedSubscriptionData["pendingFees"] = pendingFees;
+    updatedSubscriptionData["totalFees"] = finalTotalAmount;
+
+    try {
+      await Subscription.findByIdAndUpdate(
+        subscriptionId,
+        updatedSubscriptionData
+      );
+
+      return res
+        .status(200)
+        .json({ status: "success", message: "Update successfull!" });
+    } catch (error) {
+      logger.log({
+        level: "error",
+        message: `categories.js | /update-category-subscribed | PUT | Error: ${error}`,
+      });
+
+      return res.status(400).json({
+        status: "error",
+        message: "Unable to update subscribtion",
+        error: error,
+      });
+    }
+  } else {
+    return res
+      .status(200)
+      .json({ status: "success", message: "Nothing to subscribe" });
+  }
+});
+
+module.exports = app;
