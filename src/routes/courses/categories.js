@@ -331,14 +331,6 @@ app.post("/new-category-subscribe", verify, async (req, res) => {
     return res.status(400).json({ message: "Invalid Category Id" });
   }
 
-  if (!mongoose.isValidObjectId(collegeId)) {
-    logger.log({
-      level: "error",
-      message: `categories.js | /new-category-subscribe | POST | Invalid College ID`,
-    });
-    return res.status(400).json({ message: "Invalid College Id" });
-  }
-
   if (!mongoose.isValidObjectId(studentId)) {
     logger.log({
       level: "error",
@@ -348,6 +340,24 @@ app.post("/new-category-subscribe", verify, async (req, res) => {
   }
 
   var categoryData = await Pricing.findById(categoryId);
+
+  //Check if user is already subscribed to the category
+  var subscriptionStatus = await Subscription.find({
+    student: studentId,
+    categoryId: categoryId,
+  });
+
+  if (subscriptionStatus.length > 0) {
+    logger.log({
+      level: "error",
+      message: `categories.js | /new-category-subscribe | POST | Category not found`,
+    });
+    return res.status(400).json({
+      status: "error",
+      message: "Category not found",
+      error: error,
+    });
+  }
 
   if (categoryData) {
     var pendingFees = 0;
@@ -380,7 +390,6 @@ app.post("/new-category-subscribe", verify, async (req, res) => {
 
     var subscription = new Subscription({
       categoryId: categoryId,
-      college: collegeId,
       dateOfPayment: dateOfPayment,
       isPaid: isPaid,
       modeOfPayment: modeOfPayment,
@@ -408,6 +417,16 @@ app.post("/new-category-subscribe", verify, async (req, res) => {
         error: error,
       });
     }
+  } else {
+    logger.log({
+      level: "error",
+      message: `categories.js | /new-category-subscribe | POST | Category not found`,
+    });
+    return res.status(400).json({
+      status: "error",
+      message: "Category not found",
+      error: error,
+    });
   }
 });
 
