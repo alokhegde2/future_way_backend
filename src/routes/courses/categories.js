@@ -350,11 +350,11 @@ app.post("/new-category-subscribe", verify, async (req, res) => {
   if (subscriptionStatus.length > 0) {
     logger.log({
       level: "error",
-      message: `categories.js | /new-category-subscribe | POST | Category not found`,
+      message: `categories.js | /new-category-subscribe | POST | Already Subscribed`,
     });
     return res.status(400).json({
       status: "error",
-      message: "Category not found",
+      message: "Already Subscribed",
       error: error,
     });
   }
