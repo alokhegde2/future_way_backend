@@ -389,7 +389,8 @@ app.post("/new-category-subscribe", verify, async (req, res) => {
     }
 
     var subscription = new Subscription({
-      categoryId: categoryId,
+      categoryId: categoryData["id"],
+      college:collegeId,
       dateOfPayment: dateOfPayment,
       isPaid: isPaid,
       modeOfPayment: modeOfPayment,

@@ -31,7 +31,7 @@ const pricingValidation = (data) => {
 
 const subscriptionValidation = (data) => {
   const schema = Joi.object({
-    collegeId: Joi.string().optional(),
+    collegeId: Joi.string().required(),
     studentId: Joi.string().required(),
     categoryId: Joi.string().required(),
     isPaid: Joi.boolean().optional().default(false),
